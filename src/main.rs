@@ -1,4 +1,5 @@
 extern crate unicode_width;
+extern crate local_encoding;
 
 mod args;
 mod matching;
@@ -14,6 +15,7 @@ use screen::Key;
 use screen::Key::*;
 use self::SearchState::*;
 use unicode_width::UnicodeWidthStr;
+use local_encoding::{Encoding, Encoder};
 
 #[cfg(windows)] pub const NEWLINE: &'static str = "\r\n";
 #[cfg(not(windows))] pub const NEWLINE: &'static str = "\n";
@@ -279,8 +281,20 @@ fn read_choices() -> Vec<String> {
 
     let mut stdin = stdin.lock();
     loop {
-        let mut s = String::new();
-        stdin.read_line(&mut s).unwrap();
+        let mut s: String;
+        let mut buffer = Vec::new();
+        stdin.read_until(b'\n', &mut buffer).unwrap();
+        let buffer2 = buffer.clone();
+        let utf8_string_result = String::from_utf8(buffer2);
+        // for non-UTF8 on Windows
+        let oem_string_result = Encoding::OEM.to_string(&buffer);
+        if let Ok(su) = utf8_string_result {
+            s = String::from(su);
+        } else if let Ok(oem_string) = oem_string_result {
+            s = String::from(oem_string);
+        } else {
+            continue;
+        }
         if s.is_empty() { break; }
         trim(&mut s);
         lines.push(s);

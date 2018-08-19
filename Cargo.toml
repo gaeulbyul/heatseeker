@@ -21,6 +21,7 @@ getopts = "0.2.15"
 unicode-width = "0.1.4"
 num_cpus = "1.7.0"
 crossbeam = "0.3.0"
+local-encoding = "0.2.0"
 
 [build-dependencies]
 time = "0.1.38"
